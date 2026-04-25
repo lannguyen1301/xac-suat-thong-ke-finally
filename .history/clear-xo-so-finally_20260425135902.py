@@ -3,9 +3,9 @@ import json
 from datetime import datetime
 
 # ================== CẤU HÌNH ==================
-file_path = r"E:\xac-suat-thong-ke-finally\xac-suat-thong-ke.xlsx"   # ← Đổi đường dẫn nếu cần
-output_path = r"E:\xac-suat-thong-ke-finally\data\xac-suat-thong-ke_clean.json"
-log_path = r"E:\xac-suat-thong-ke-finally\log_kiem_tra_du_lieu.txt"
+file_path = r"E:\xac-suat-thong-ke finally\xac-suat-thong-ke.xlsx"   # ← Đổi đường dẫn nếu cần
+output_path = r"E:\xac-suat-thong-ke finally\data\xac-suat-thong-ke_clean.json"
+log_path = r"E:\xac-suat-thong-ke finally\log_kiem_tra_du_lieu.txt"
 
 # Cấu hình độ dài và loại (array hay string)
 LOTTERY_CONFIG = {
