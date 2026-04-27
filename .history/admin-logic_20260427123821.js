@@ -1,7 +1,5 @@
 // admin-logic.js
 
-// admin-logic.js
-
 // Biến toàn cục để lưu trữ dữ liệu sau khi tải xong, giúp các hàm khác truy cập dễ dàng
 window.currentData = [];
 
@@ -119,42 +117,4 @@ function renderPredictionUI(list) {
     const container = document.getElementById("prediction-container");
     if (!container) return;
     // ... (Giữ nguyên phần code giao diện dự đoán hôm qua của mình) ...
-}
-
-function renderPredictionUI(list) {
-    const container = document.getElementById("prediction-container");
-    if (!container) return;
-
-    let html = `
-        <div class="prediction-card">
-            <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-                🎯 Dự Đoán Tin Cậy (Dựa trên Phễu 3 Lớp)
-            </h2>
-            <div class="prediction-grid">
-    `;
-
-    list.forEach((item, index) => {
-        // Tính toán màu sắc dựa trên điểm số (Score càng cao càng xanh)
-        const badgeColor =
-            item.score > 120
-                ? "#27ae60"
-                : item.score > 70
-                  ? "#f39c12"
-                  : "#7f8c8d";
-
-        html += `
-            <div class="prediction-item" style="border-left: 5px solid ${badgeColor}; margin-bottom: 15px; padding: 10px; background: #f9f9f9;">
-                <span style="font-size: 1.2em; font-weight: bold;">Top ${index + 1}: Số ${item.number}</span>
-                <span style="float: right; background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em;">
-                    Trust Score: ${item.score}
-                </span>
-                <p style="margin: 5px 0 0; font-size: 0.9em; color: #666;">
-                    💡 Phân tích: ${item.insights.length > 0 ? item.insights.join(" | ") : "Dữ liệu ổn định"}
-                </p>
-            </div>
-        `;
-    });
-
-    html += `</div></div>`;
-    container.innerHTML = html;
 }
