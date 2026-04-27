@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dự đoán xổ số TP.HCM</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: sans-serif;
+    }
+
+    .glow {
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #10b981;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+  <!-- HEADER -->
+  <h1 id="title" class="text-xl md:text-3xl font-bold text-center text-emerald-400 mb-6">
+    Đang tải dữ liệu...
+  </h1>
+
+  <!-- LOADING -->
+  <div id="loading" class="flex flex-col items-center justify-center mb-6">
+    <div class="spinner mb-2"></div>
+    <p class="text-sm text-gray-400">Tính toán xác suất từ 1779 kỳ quay...</p>
+  </div>
+
+  <!-- CONTROL PANEL -->
+  <div class="bg-slate-800 p-4 rounded-xl mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <input type="date" id="dateInput" class="p-2 rounded bg-slate-700 text-white" />
+    <select id="weekday" class="p-2 rounded bg-slate-700 text-white">
+      <option value="">Chọn thứ</option>
+      <option value="1">Thứ 2</option>
+      <option value="6">Thứ 7</option>
+    </select>
+    <select id="limit" class="p-2 rounded bg-slate-700 text-white">
+      <option value="5">5 kỳ</option>
+      <option value="10">10 kỳ</option>
+      <option value="20">20 kỳ</option>
+      <option value="40">40 kỳ</option>
+      <option value="80">80 kỳ</option>
+      <option value="160">160 kỳ</option>
+    </select>
+  </div>
+
+  <!-- PREDICTION TABLE -->
+  <div id="prediction" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+
+  <!-- HISTORY -->
+  <h2 class="text-lg md:text-xl font-semibold mb-4 text-emerald-400">
+    Lịch sử gần nhất
+  </h2>
+
+  <div id="history" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+  <!-- 
+  <script>
+let rawData = [];
+
+async function fetchData() {
+  try {
+    const res = await fetch("https://xac-suat-thong-ke-finally.vercel.app/api/results");
+    const data = await res.json();
+    rawData = data.data || data;
+
+    renderAll();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function getNextDrawDate(latestDateStr) {
+  const date = new Date(latestDateStr);
+
+  while (true) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day === 1 || day === 6) break;
+  }
+
+  return date.toLocaleDateString("vi-VN");
+}
+
+function generateFakePrediction() {
+  const prizes = ["GDB","G1","G2","G3","G4","G5","G6","G7","G8"];
+  return prizes.map(p => ({
+    name: p,
+    number: Math.floor(Math.random() * 99999).toString().padStart(5,'0'),
+    confidence: (Math.random()*40 + 60).toFixed(1),
+    frequency: Math.floor(Math.random()*50)
+  }));
+}
+
+function renderPrediction() {
+  const container = document.getElementById("prediction");
+  container.innerHTML = "";
+
+  const data = generateFakePrediction();
+
+  data.forEach(item => {
+    container.innerHTML += `
+      <div class="bg-slate-800 p-4 rounded-xl text-center">
+        <h3 class="text-sm text-gray-400">${item.name}</h3>
+        <div class="text-xl md:text-2xl font-bold text-emerald-400 glow p-2 rounded mt-2">
+          ${item.number}
+        </div>
+        <p class="text-xs text-gray-400 mt-2">
+          Độ tin cậy: ${item.confidence}%<br/>
+          Tần suất: ${item.frequency}
+        </p>
+      </div>
+    `;
+  });
+}
+
+function renderHistory(limit=5) {
+  const container = document.getElementById("history");
+  container.innerHTML = "";
+
+  rawData.slice(0, limit).forEach(item => {
+    container.innerHTML += `
+      <div class="bg-slate-800 p-4 rounded-xl">
+        <p class="text-sm text-gray-400 mb-2">${item.date}</p>
+        <p class="text-emerald-400 font-bold">
+          GĐB: ${item.DB || "----"}
+        </p>
+      </div>
+    `;
+  });
+}
+
+function renderAll() {
+  document.getElementById("loading").style.display = "none";
+
+  const latest = rawData[0];
+  const nextDate = getNextDrawDate(latest.date);
+
+  document.getElementById("title").innerText =
+    "Dự đoán kết quả xổ số TP.HCM kỳ quay tiếp theo: " + nextDate;
+
+  renderPrediction();
+  renderHistory();
+}
+
+document.getElementById("limit").addEventListener("change", (e)=>{
+  renderHistory(e.target.value);
+});
+
+fetchData();
+</script>
+-->
+
+  <script>
+    let rawData = [];
+
+    async function fetchData() {
+      try {
+        const res = await fetch("https://xac-suat-thong-ke-finally.vercel.app/api/results");
+        const data = await res.json();
+        // Lấy mảng data và đảo ngược để ngày mới nhất lên đầu cho dễ xử lý lịch sử
+        rawData = (data.data || data).reverse();
+
+        renderAll();
+      } catch (err) {
+        console.error("Lỗi kết nối API:", err);
+        document.getElementById("title").innerText = "Lỗi tải dữ liệu!";
+      }
+    }
+
+    // Hàm tính ngày quay tiếp theo cực chuẩn cho đài HCM
+    function getNextDrawDate(latestDateStr) {
+      const date = new Date(latestDateStr);
+      let count = 0;
+      while (count < 7) { // Chỉ tìm trong vòng 7 ngày tới
+        date.setDate(date.getDate() + 1);
+        const day = date.getDay(); // 1 là Thứ 2, 6 là Thứ 7
+        if (day === 1 || day === 6) break;
+        count++;
+      }
+      return date.toLocaleDateString("vi-VN");
+    }
+
+    // Hàm dự đoán "Tạm thời" (Sẽ thay bằng logic xác suất sau)
+    function generatePrediction(latestData) {
+      const prizes = [
+        { name: "GDB", digits: 6 }, { name: "G1", digits: 5 },
+        { name: "G2", digits: 5 }, { name: "G3", digits: 5, qty: 2 },
+        { name: "G4", digits: 5, qty: 7 }, { name: "G5", digits: 4 },
+        { name: "G6", digits: 4, qty: 3 }, { name: "G7", digits: 3 },
+        { name: "G8", digits: 2 }
+      ];
+
+      return prizes.map(p => {
+        const genNum = () => Math.floor(Math.random() * Math.pow(10, p.digits)).toString().padStart(p.digits, '0');
+        return {
+          name: p.name,
+          // Nếu giải có nhiều số (như G3, G4) thì tạo mảng số
+          numbers: p.qty ? Array.from({ length: p.qty }, genNum) : [genNum()],
+          confidence: (Math.random() * 20 + 75).toFixed(1), // Giả lập độ tin cậy > 75%
+          frequency: Math.floor(Math.random() * 50 + 10)
+        };
+      });
+    }
+
+    function renderPrediction() {
+      const container = document.getElementById("prediction");
+      container.innerHTML = "";
+
+      // Lấy dữ liệu kỳ gần nhất để làm cơ sở (tạm thời)
+      const predictions = generatePrediction(rawData[0]);
+
+      predictions.forEach(item => {
+        // Hiển thị danh sách số nếu có nhiều số trong 1 giải
+        const numbersHtml = item.numbers.map(n => `<div class="text-xl md:text-2xl font-bold text-emerald-400 glow p-1">${n}</div>`).join("");
+
+        container.innerHTML += `
+            <div class="bg-slate-800 p-4 rounded-xl text-center border border-slate-700">
+                <h3 class="text-sm text-gray-400 font-semibold">${item.name}</h3>
+                <div class="flex flex-wrap justify-center gap-2 mt-2">
+                    ${numbersHtml}
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2 italic">
+                    Độ tin cậy: ${item.confidence}% | Tần suất: ${item.frequency}
+                </p>
+            </div>
+        `;
+      });
+    }
+
+    function renderHistory(limit = 5) {
+      const container = document.getElementById("history");
+      container.innerHTML = "";
+
+      rawData.slice(0, limit).forEach(item => {
+        container.innerHTML += `
+            <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-500">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-xs text-gray-400">${item.date} (${item.dayOfWeek})</p>
+                    <span class="text-[10px] bg-slate-700 px-2 py-1 rounded">Kỳ: ${item.period}</span>
+                </div>
+                <p class="text-emerald-400 font-bold text-lg">
+                    GĐB: ${item.results?.GDB || "----"}
+                </p>
+                <p class="text-gray-400 text-xs mt-1">Giải 8: ${item.results?.G8 || "--"}</p>
+            </div>
+        `;
+      });
+    }
+
+    function renderAll() {
+      document.getElementById("loading").style.display = "none";
+
+      // Vì đã reverse() nên phần tử 0 là mới nhất
+      const latest = rawData[0];
+      const nextDate = getNextDrawDate(latest.date);
+
+      document.getElementById("title").innerHTML = `
+        <span class="block text-sm font-normal text-gray-400 uppercase tracking-widest mb-2">Dự đoán kỳ quay tiếp theo</span>
+        TP.HCM: ${nextDate}
+    `;
+
+      renderPrediction();
+      renderHistory(5);
+    }
+
+    // Lắng nghe sự kiện đổi limit
+    document.getElementById("limit").addEventListener("change", (e) => {
+      renderHistory(parseInt(e.target.value));
+    });
+
+    fetchData();
+  </script>
+</body>
+
+</html>

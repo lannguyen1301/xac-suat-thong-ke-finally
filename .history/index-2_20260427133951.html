@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dự đoán xổ số TP.HCM</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: sans-serif;
+    }
+
+    .glow {
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #10b981;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 font-sans text-slate-900 p-4 md:p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <section id="prediction-section" class="bg-white rounded-3xl shadow-xl overflow-hidden border-t-4 border-blue-600">
+      <div class="p-6 md:p-10 bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
+        <h1 class="text-3xl font-extrabold mb-2">🎯 Dự Đoán Tin Cậy (Trust Score)</h1>
+        <p class="text-blue-100 italic" id="prediction-date">Đang cập nhật ngày dự báo...</p>
+      </div>
+
+      <div id="prediction-results" class="p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+      </div>
+
+      <div class="p-6 bg-blue-50 border-t border-blue-100">
+        <h3 class="font-bold text-blue-800 mb-2">💡 Tại sao lại là những số này?</h3>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Hệ thống đã quét qua hơn <strong>17 năm dữ liệu</strong>, áp dụng thuật toán <strong>Bayes Inference</strong>
+          để tính toán trọng số theo thời gian. Các kỳ quay gần nhất được ưu tiên (Recency Weighting) vì chúng phản ánh
+          "nhịp" hiện tại của lồng quay. Những con số trên đạt điểm <em>Trust Score</em> cao nhất nhờ sự kết hợp giữa
+          tần suất xuất hiện ổn định và chu kỳ lặp lại tiềm năng trong 30 ngày gần đây.
+        </p>
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <section class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500">
+        <h2 class="text-xl font-bold mb-4 flex items-center text-green-700">
+          🏆 Số Xuất Hiện Nhiều Nhất (17 Năm)
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="p-2 text-left">Giải</th>
+                <th class="p-2 text-center">Số</th>
+                <th class="p-2 text-right">Tổng lần</th>
+              </tr>
+            </thead>
+            <tbody id="top-freq-body">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-red-500">
+        <h2 class="text-xl font-bold mb-4 flex items-center text-red-700">
+          🧊 Số Ít Xuất Hiện Nhất (Số Khan)
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="p-2 text-left">Giải</th>
+                <th class="p-2 text-center">Số</th>
+                <th class="p-2 text-right">Tổng lần</th>
+              </tr>
+            </thead>
+            <tbody id="bottom-freq-body">
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="prediction-engine.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const response = await fetch('data/xac-suat-thong-ke_clean.json?t=' + new Date().getTime());
+      const allData = await response.json();
+
+      // 1. Hiển thị dự đoán
+      const predictions = getAdvancedPrediction(allData);
+      renderPredictions(predictions);
+
+      // 2. Tính toán thống kê 17 năm
+      const stats = calculateDeepStats(allData);
+      renderStatsTable(stats);
+    });
+
+    function renderPredictions(list) {
+      const container = document.getElementById('prediction-results');
+      container.innerHTML = list.map((item, index) => `
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center hover:shadow-md transition">
+                    <div class="text-xs text-slate-400 font-bold mb-1">TOP ${index + 1}</div>
+                    <div class="text-3xl font-black text-indigo-700">${item.number}</div>
+                    <div class="text-[10px] mt-2 bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 inline-block">Score: ${item.score}</div>
+                </div>
+            `).join('');
+    }
+
+    function calculateDeepStats(data) {
+      const prizeKeys = ['GDB', 'G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8'];
+      let resultStats = {};
+
+      prizeKeys.forEach(prize => {
+        let counts = {};
+        data.forEach(item => {
+          const raw = item.results[prize];
+          const numbers = Array.isArray(raw) ? raw : [raw];
+          numbers.forEach(num => {
+            const tail = num.slice(-2);
+            counts[tail] = (counts[tail] || 0) + 1;
+          });
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        resultStats[prize] = {
+          top: { num: sorted[0][0], count: sorted[0][1] },
+          bottom: { num: sorted[sorted.length - 1][0], count: sorted[sorted.length - 1][1] }
+        };
+      });
+      return resultStats;
+    }
+
+    function renderStatsTable(stats) {
+      const topBody = document.getElementById('top-freq-body');
+      const bottomBody = document.getElementById('bottom-freq-body');
+
+      let topHtml = '';
+      let bottomHtml = '';
+
+      for (let prize in stats) {
+        topHtml += `
+                    <tr class="border-b border-gray-50 hover:bg-green-50">
+                        <td class="p-2 font-bold text-gray-600">${prize}</td>
+                        <td class="p-2 text-center font-mono text-lg text-green-600">${stats[prize].top.num}</td>
+                        <td class="p-2 text-right text-gray-500">${stats[prize].top.count} lần</td>
+                    </tr>`;
+        bottomHtml += `
+                    <tr class="border-b border-gray-50 hover:bg-red-50">
+                        <td class="p-2 font-bold text-gray-600">${prize}</td>
+                        <td class="p-2 text-center font-mono text-lg text-red-600">${stats[prize].bottom.num}</td>
+                        <td class="p-2 text-right text-gray-500">${stats[prize].bottom.count} lần</td>
+                    </tr>`;
+      }
+      topBody.innerHTML = topHtml;
+      bottomBody.innerHTML = bottomHtml;
+    }
+  </script>
+</body>
+
+</html>
