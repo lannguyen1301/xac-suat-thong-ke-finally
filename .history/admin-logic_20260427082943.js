@@ -156,134 +156,26 @@ function editEntry(date) {
 }
 
 // 3. DELETE (D): Xóa dữ liệu (Sẽ gọi hàm updateGitHub của bấy bề)
-// async function deleteEntry(date) {
-//     if (
-//         !confirm(
-//             `Bấy bề có thực sự muốn xóa ngày ${date} không? Vĩnh viễn đấy!`,
-//         )
-//     )
-//         return;
+async function deleteEntry(date) {
+    if (
+        !confirm(
+            `Bấy bề có thực sự muốn xóa ngày ${date} không? Vĩnh viễn đấy!`,
+        )
+    )
+        return;
 
-//     // Lọc bỏ dữ liệu cũ
-//     const filteredData = window.currentData.filter(
-//         (item) => item.date !== date,
-//     );
-
-//     // Ở đây mình cần một hàm để "Đẩy mảng mới này lên GitHub"
-//     // Bấy bề có thể gọi hàm updateGitHub nhưng truyền thêm một tham số "isDelete"
-//     // Hoặc đơn giản là tạo một hàm chuyên để ghi đè.
-
-//     // Tôi sẽ hướng dẫn bấy bề cách tích hợp vào hàm updateGitHub hiện có của bấy bề sau nhé!
-//     console.log("Đã sẵn sàng xóa ngày: " + date);
-//     alert("Tính năng xóa đang chờ kết nối với hàm Push GitHub của bấy bề!");
-// }
-
-// Bước 2: Đẩy lên GitHub (Bản nâng cấp thông minh)
-async function updateGitHub(newData) {
-    let token = localStorage.getItem("github_token");
-    if (!token) {
-        token = prompt("Dán Token vào đây bấy bề:");
-        if (token) localStorage.setItem("github_token", token);
-        else return;
-    }
-
-    try {
-        const metaUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}?ref=${BRANCH}`;
-        const metaRes = await fetch(metaUrl, {
-            headers: { Authorization: `token ${token}` },
-        });
-        const metaData = await metaRes.json();
-        const sha = metaData.sha;
-
-        const rawRes = await fetch(
-            `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}?t=${new Date().getTime()}`,
-        );
-        let content = await rawRes.json();
-
-        // Format dữ liệu từ form
-        const formattedData = {
-            date: newData.date,
-            dayOfWeek: newData.day,
-            week: parseInt(newData.round) || 0,
-            results: {
-                GDB: newData.results.gdb,
-                G1: newData.results.g1,
-                G2: newData.results.g2,
-                G3: newData.results.g3,
-                G4: newData.results.g4,
-                G5: newData.results.g5,
-                G6: newData.results.g6,
-                G7: newData.results.g7,
-                G8: newData.results.g8,
-            },
-            allNumbers: [
-                newData.results.gdb,
-                newData.results.g1,
-                newData.results.g2,
-                ...newData.results.g3,
-                ...newData.results.g4,
-                newData.results.g5,
-                ...newData.results.g6,
-                newData.results.g7,
-                newData.results.g8,
-            ],
-        };
-
-        // --- LOGIC THÔNG MINH: KIỂM TRA TRÙNG NGÀY ĐỂ SỬA ---
-        const existingIndex = content.findIndex(
-            (item) => item.date === newData.date,
-        );
-        if (existingIndex > -1) {
-            content[existingIndex] = formattedData; // Ghi đè (Sửa)
-        } else {
-            content.push(formattedData); // Thêm mới
-        }
-
-        await pushToGitHub(
-            content,
-            sha,
-            token,
-            `Admin: Cập nhật ngày ${newData.date}`,
-        );
-    } catch (err) {
-        alert("Lỗi: " + err.message);
-    }
-}
-
-// Hàm phụ để dùng chung cho cả Xóa và Sửa
-async function updateGitHubManual(fullData, message) {
-    let token = localStorage.getItem("github_token");
-    const metaUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}?ref=${BRANCH}`;
-    const metaRes = await fetch(metaUrl, {
-        headers: { Authorization: `token ${token}` },
-    });
-    const metaData = await metaRes.json();
-    await pushToGitHub(fullData, metaData.sha, token, message);
-}
-
-async function pushToGitHub(data, sha, token, message) {
-    const jsonString = JSON.stringify(data, null, 2);
-    const updatedContentBase64 = btoa(unescape(encodeURIComponent(jsonString)));
-    const response = await fetch(
-        `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`,
-        {
-            method: "PUT",
-            headers: {
-                Authorization: `token ${token}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                message: message,
-                content: updatedContentBase64,
-                sha: sha,
-            }),
-        },
+    // Lọc bỏ dữ liệu cũ
+    const filteredData = window.currentData.filter(
+        (item) => item.date !== date,
     );
 
-    if (response.ok) {
-        alert("✅ Thành công!");
-        if (typeof loadData === "function") loadData(); // Tải lại bảng mà không reload trang
-    }
+    // Ở đây mình cần một hàm để "Đẩy mảng mới này lên GitHub"
+    // Bấy bề có thể gọi hàm updateGitHub nhưng truyền thêm một tham số "isDelete"
+    // Hoặc đơn giản là tạo một hàm chuyên để ghi đè.
+
+    // Tôi sẽ hướng dẫn bấy bề cách tích hợp vào hàm updateGitHub hiện có của bấy bề sau nhé!
+    console.log("Đã sẵn sàng xóa ngày: " + date);
+    alert("Tính năng xóa đang chờ kết nối với hàm Push GitHub của bấy bề!");
 }
 
 // Giữ lại hàm renderPredictionUI cũ của bấy bề ở đây...

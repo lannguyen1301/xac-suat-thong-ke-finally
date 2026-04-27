@@ -119,35 +119,15 @@
         </button>
     </div>
 
-    <div class="mt-10 bg-white rounded-2xl shadow-xl p-6 overflow-x-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-            📋 Danh sách 20 kỳ quay gần nhất
-        </h2>
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="p-3 border">Ngày</th>
-                    <th class="p-3 border">Thứ</th>
-                    <th class="p-3 border">Giải Đặc Biệt</th>
-                    <th class="p-3 border text-center">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="data-table-body">
-                <tr>
-                    <td colspan="4" class="p-4 text-center">Đang tải dữ liệu...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
     <div id="prediction-container">
         <p>Đang phân tích dữ liệu 17 năm...</p>
     </div>
 
     <script src="prediction-engine.js"></script>
     <script src="admin-logic.js"></script>
+</body>
 
-    <!-- <script>
+<script>
     // --- CẤU HÌNH ---
     const OWNER = "lannguyen1301";
     const REPO = "xac-suat-thong-ke-finally";
@@ -282,145 +262,7 @@
             alert("❌ Thất bại: " + err.message);
         }
     }
-</script> -->
-
-
-    <script>
-        // --- CẤU HÌNH ---
-        const OWNER = "lannguyen1301";
-        const REPO = "xac-suat-thong-ke-finally";
-        const PATH = "data/xac-suat-thong-ke_clean.json";
-        const BRANCH = "main";
-
-        // Hàm xóa token đã lưu
-        function clearToken() {
-            localStorage.removeItem("github_token");
-            alert("Đã xóa token khỏi máy này!");
-        }
-
-        // Lấy mảng dữ liệu từ các input nhóm
-        function getValues(className) {
-            return Array.from(document.querySelectorAll(`.${className}`))
-                .map(i => i.value.trim())
-                .filter(v => v !== "");
-        }
-
-        // Bước 1: Thu thập dữ liệu
-        function submitData() {
-            const data = {
-                date: document.getElementById("date").value,
-                day: document.getElementById("day").value,
-                round: document.getElementById("round").value,
-                results: {
-                    gdb: document.getElementById("gdb").value,
-                    g1: document.getElementById("g1").value,
-                    g2: document.getElementById("g2").value,
-                    g3: getValues("g3"),
-                    g4: getValues("g4"),
-                    g5: document.getElementById("g5").value,
-                    g6: getValues("g6"),
-                    g7: document.getElementById("g7").value,
-                    g8: document.getElementById("g8").value
-                }
-            };
-
-            if (!data.date) return alert("Bấy bề chọn ngày đã chứ!");
-            updateGitHub(data);
-        }
-
-        // Bước 2: Đẩy lên GitHub
-        async function updateGitHub(newData) {
-            let token = localStorage.getItem("github_token");
-
-            if (!token) {
-                token = prompt("Lần đầu sử dụng, hãy dán GitHub Personal Access Token vào đây:");
-                if (token) {
-                    localStorage.setItem("github_token", token);
-                } else {
-                    return;
-                }
-            }
-
-            try {
-                console.log("Đang tải mã SHA và dữ liệu Raw...");
-
-                const metaUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}?ref=${BRANCH}`;
-                const metaRes = await fetch(metaUrl, {
-                    headers: { "Authorization": `token ${token}` }
-                });
-
-                if (metaRes.status === 401) {
-                    localStorage.removeItem("github_token");
-                    throw new Error("Token sai hoặc hết hạn.");
-                }
-                if (!metaRes.ok) throw new Error("Không lấy được mã SHA.");
-
-                const metaData = await metaRes.json();
-                const sha = metaData.sha;
-
-                const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}?t=${new Date().getTime()}`;
-                const rawRes = await fetch(rawUrl);
-                const content = await rawRes.json();
-
-                // Format dữ liệu mới
-                const formattedData = {
-                    date: newData.date,
-                    dayOfWeek: newData.day,
-                    week: parseInt(newData.round) || 0,
-                    period: 1,
-                    isRestDay: false,
-                    results: {
-                        GDB: newData.results.gdb, G1: newData.results.g1, G2: newData.results.g2,
-                        G3: newData.results.g3, G4: newData.results.g4, G5: newData.results.g5,
-                        G6: newData.results.g6, G7: newData.results.g7, G8: newData.results.g8
-                    },
-                    allNumbers: [
-                        newData.results.gdb, newData.results.g1, newData.results.g2,
-                        ...newData.results.g3, ...newData.results.g4,
-                        newData.results.g5, ...newData.results.g6,
-                        newData.results.g7, newData.results.g8
-                    ]
-                };
-
-                content.push(formattedData);
-
-                console.log("Đang đóng gói và đẩy lên GitHub...");
-                const jsonString = JSON.stringify(content, null, 2);
-                const updatedContentBase64 = btoa(unescape(encodeURIComponent(jsonString)));
-
-                const putResponse = await fetch(metaUrl, {
-                    method: "PUT",
-                    headers: {
-                        "Authorization": `token ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        message: `Admin: Cập nhật kết quả ngày ${newData.date}`,
-                        content: updatedContentBase64,
-                        sha: sha
-                    })
-                });
-
-                if (putResponse.ok) {
-                    alert("✅ CHIẾN THẮNG RỒI BẤY BỀ! Dữ liệu đã lên sàn.");
-
-                    // === CHỖ KẾT NỐI MẠNH MẼ ĐÂY ===
-                    // Thay vì reload trang, mình gọi bộ não tính toán lại luôn
-                    if (typeof loadAndPredict === "function") {
-                        console.log("Đang cập nhật bảng dự đoán từ dữ liệu mới...");
-                        loadAndPredict();
-                    }
-                    // ===============================
-                } else {
-                    throw new Error("Lỗi khi ghi đè file.");
-                }
-
-            } catch (err) {
-                console.error("LỖI:", err);
-                alert("❌ Thất bại: " + err.message);
-            }
-        }
-    </script>
+</script>
 </body>
 
 </html>
