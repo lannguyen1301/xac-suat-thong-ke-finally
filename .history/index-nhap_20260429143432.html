@@ -180,122 +180,133 @@ fetchData();
 -->
 
   <script>
+    // --- PHẦN 1: THUẬT TOÁN DỰ ĐOÁN (ĐÃ GIA CỐ CHỐNG LỖI COVID/NULL) ---
+    function getAdvancedPrediction(data) {
+      if (!data || data.length < 50) return [];
+
+      // Lọc bỏ kỳ quay lỗi/null để tránh sập
+      const validData = data.filter(d => d.results && d.results.G8);
+      const recent150 = validData.slice(0, 150);
+      const targetDay = validData[0].dayOfWeek;
+
+      let predictionTable = [];
+
+      // Duyệt từ 00 đến 99 để tìm số có Score cao nhất
+      for (let i = 0; i <= 99; i++) {
+        const numStr = i.toString().padStart(2, "0");
+        let score = 0;
+        let insights = [];
+
+        // 1. Tần suất ngắn hạn (150 kỳ)
+        const freqRecent = recent150.filter(d =>
+          Object.values(d.results).some(v => String(v).endsWith(numStr))
+        ).length;
+        score += freqRecent * 10;
+
+        // 2. Vía theo thứ (Dùng targetDay từ kỳ mới nhất)
+        const freqByDay = validData.slice(0, 500).filter(d =>
+          d.dayOfWeek === targetDay &&
+          Object.values(d.results).some(v => String(v).endsWith(numStr))
+        ).length;
+        score += freqByDay * 15;
+
+        // 3. Gap Analysis (Nhịp rơi)
+        const lastIndex = recent150.findIndex(d =>
+          Object.values(d.results).some(v => String(v).endsWith(numStr))
+        );
+        const gap = lastIndex === -1 ? 151 : lastIndex;
+        if (gap >= 7 && gap <= 16) { score += 40; insights.push("Nhịp rơi đẹp"); }
+        else if (gap > 60) { score -= 20; insights.push("Gan dài"); }
+
+        predictionTable.push({
+          number: numStr,
+          score: Math.round(score),
+          insights: insights.length > 0 ? insights[0] : "Ổn định",
+          gap: gap
+        });
+      }
+      // Trả về Top các số mạnh nhất
+      return predictionTable.sort((a, b) => b.score - a.score);
+    }
+
+    // --- PHẦN 2: LOGIC HIỂN THỊ ---
     let rawData = [];
 
     async function fetchData() {
       try {
         const res = await fetch("https://xac-suat-thong-ke-finally.vercel.app/api/results");
         const data = await res.json();
-        // Lấy mảng data và đảo ngược để ngày mới nhất lên đầu cho dễ xử lý lịch sử
+        // Đảo ngược để ngày mới nhất lên đầu
         rawData = (data.data || data).reverse();
-
         renderAll();
       } catch (err) {
-        console.error("Lỗi kết nối API:", err);
-        document.getElementById("title").innerText = "Lỗi tải dữ liệu!";
+        console.error("Lỗi API:", err);
+        document.getElementById("title").innerText = "Lỗi kết nối!";
       }
-    }
-
-    // Hàm tính ngày quay tiếp theo cực chuẩn cho đài HCM
-    function getNextDrawDate(latestDateStr) {
-      const date = new Date(latestDateStr);
-      let count = 0;
-      while (count < 7) { // Chỉ tìm trong vòng 7 ngày tới
-        date.setDate(date.getDate() + 1);
-        const day = date.getDay(); // 1 là Thứ 2, 6 là Thứ 7
-        if (day === 1 || day === 6) break;
-        count++;
-      }
-      return date.toLocaleDateString("vi-VN");
-    }
-
-    // Hàm dự đoán "Tạm thời" (Sẽ thay bằng logic xác suất sau)
-    function generatePrediction(latestData) {
-      const prizes = [
-        { name: "GDB", digits: 6 }, { name: "G1", digits: 5 },
-        { name: "G2", digits: 5 }, { name: "G3", digits: 5, qty: 2 },
-        { name: "G4", digits: 5, qty: 7 }, { name: "G5", digits: 4 },
-        { name: "G6", digits: 4, qty: 3 }, { name: "G7", digits: 3 },
-        { name: "G8", digits: 2 }
-      ];
-
-      return prizes.map(p => {
-        const genNum = () => Math.floor(Math.random() * Math.pow(10, p.digits)).toString().padStart(p.digits, '0');
-        return {
-          name: p.name,
-          // Nếu giải có nhiều số (như G3, G4) thì tạo mảng số
-          numbers: p.qty ? Array.from({ length: p.qty }, genNum) : [genNum()],
-          confidence: (Math.random() * 20 + 75).toFixed(1), // Giả lập độ tin cậy > 75%
-          frequency: Math.floor(Math.random() * 50 + 10)
-        };
-      });
     }
 
     function renderPrediction() {
       const container = document.getElementById("prediction");
       container.innerHTML = "";
 
-      // Lấy dữ liệu kỳ gần nhất để làm cơ sở (tạm thời)
-      const predictions = generatePrediction(rawData[0]);
+      // GỌI THUẬT TOÁN THAY VÌ RANDOM
+      const topPredictions = getAdvancedPrediction(rawData);
 
-      predictions.forEach(item => {
-        // Hiển thị danh sách số nếu có nhiều số trong 1 giải
-        const numbersHtml = item.numbers.map(n => `<div class="text-xl md:text-2xl font-bold text-emerald-400 glow p-1">${n}</div>`).join("");
+      // Danh sách các giải cần hiển thị
+      const prizes = [
+        { name: "GDB", color: "text-yellow-400" }, { name: "G1", color: "text-emerald-400" },
+        { name: "G2", color: "text-emerald-400" }, { name: "G3", color: "text-emerald-400" },
+        { name: "G4", color: "text-emerald-400" }, { name: "G5", color: "text-emerald-400" },
+        { name: "G6", color: "text-emerald-400" }, { name: "G7", color: "text-emerald-400" },
+        { name: "G8", color: "text-red-500" }
+      ];
+
+      prizes.forEach((p, index) => {
+        // Lấy số dự đoán dựa trên hạng từ thuật toán (mỗi giải 1 số khác nhau trong top)
+        const item = topPredictions[index] || topPredictions[0];
 
         container.innerHTML += `
-            <div class="bg-slate-800 p-4 rounded-xl text-center border border-slate-700">
-                <h3 class="text-sm text-gray-400 font-semibold">${item.name}</h3>
-                <div class="flex flex-wrap justify-center gap-2 mt-2">
-                    ${numbersHtml}
+                <div class="bg-slate-800 p-4 rounded-xl text-center border border-slate-700 shadow-lg">
+                    <h3 class="text-xs text-gray-400 font-bold uppercase">${p.name}</h3>
+                    <div class="text-2xl font-black ${p.color} glow p-2 mt-2 font-mono">
+                        ${item.number}
+                    </div>
+                    <p class="text-[10px] text-gray-500 mt-2 italic">
+                        Độ tin cậy: ${item.score}% | ${item.insights}
+                    </p>
                 </div>
-                <p class="text-[10px] text-gray-500 mt-2 italic">
-                    Độ tin cậy: ${item.confidence}% | Tần suất: ${item.frequency}
-                </p>
-            </div>
-        `;
+            `;
       });
     }
 
     function renderHistory(limit = 5) {
       const container = document.getElementById("history");
       container.innerHTML = "";
-
       rawData.slice(0, limit).forEach(item => {
         container.innerHTML += `
-            <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-500">
-                <div class="flex justify-between items-center mb-2">
+                <div class="bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-500">
                     <p class="text-xs text-gray-400">${item.date} (${item.dayOfWeek})</p>
-                    <span class="text-[10px] bg-slate-700 px-2 py-1 rounded">Kỳ: ${item.period}</span>
+                    <p class="text-emerald-400 font-bold text-lg mt-1">GĐB: ${item.results?.GDB || "----"}</p>
+                    <p class="text-gray-500 text-xs">Giải 8: ${item.results?.G8 || "--"}</p>
                 </div>
-                <p class="text-emerald-400 font-bold text-lg">
-                    GĐB: ${item.results?.GDB || "----"}
-                </p>
-                <p class="text-gray-400 text-xs mt-1">Giải 8: ${item.results?.G8 || "--"}</p>
-            </div>
-        `;
+            `;
       });
     }
 
     function renderAll() {
       document.getElementById("loading").style.display = "none";
-
-      // Vì đã reverse() nên phần tử 0 là mới nhất
       const latest = rawData[0];
-      const nextDate = getNextDrawDate(latest.date);
+      const date = new Date(latest.date);
+      date.setDate(date.getDate() + 1); // Giả lập ngày mai
 
       document.getElementById("title").innerHTML = `
-        <span class="block text-sm font-normal text-gray-400 uppercase tracking-widest mb-2">Dự đoán kỳ quay tiếp theo</span>
-        TP.HCM: ${nextDate}
-    `;
+            <span class="block text-sm font-normal text-gray-400 uppercase mb-2">Hệ thống dự đoán thông minh</span>
+            TP.HCM: ${date.toLocaleDateString("vi-VN")}
+        `;
 
       renderPrediction();
       renderHistory(5);
     }
-
-    // Lắng nghe sự kiện đổi limit
-    document.getElementById("limit").addEventListener("change", (e) => {
-      renderHistory(parseInt(e.target.value));
-    });
 
     fetchData();
   </script>
