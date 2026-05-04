@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Dự đoán Xổ số TP.HCM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .glow {
+      text-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #10b981;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="p-4 md:p-8 max-w-6xl mx-auto">
+
+  <header class="text-center mb-10">
+    <h1 id="title" class="text-2xl md:text-4xl font-black text-emerald-400 mb-2 uppercase tracking-tighter">Đang tải dữ
+      liệu...</h1>
+    <p class="text-gray-500 text-sm italic">Dữ liệu thống kê thời gian thực từ API</p>
+  </header>
+
+  <div id="loading" class="flex flex-col items-center justify-center my-10">
+    <div class="spinner mb-4"></div>
+    <p class="text-emerald-500 animate-pulse">Đang tính toán xác suất...</p>
+  </div>
+
+  <div id="prediction" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-12"></div>
+
+  <h2 class="text-xl font-bold mb-6 text-emerald-400 border-l-4 border-emerald-500 pl-3">Kết quả các kỳ gần nhất</h2>
+  <div id="history" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+  <script src="prediction-engine.js"></script>
+
+  <script>
+    let rawData = [];
+
+    async function fetchData() {
+      try {
+        // Fetch trực tiếp từ API, thêm timestamp để tránh cache lỗi của trình duyệt
+        const res = await fetch("https://xac-suat-thong-ke-finally.vercel.app/api/results?v=" + Date.now());
+
+        if (!res.ok) throw new Error("API sập rồi bấy bề ơi!");
+
+        const json = await res.json();
+        const data = json.data || json;
+
+        // Chuẩn hóa dữ liệu: Đảo ngược để ngày mới nhất lên đầu
+        rawData = [...data].reverse();
+
+        renderAll();
+      } catch (err) {
+        console.error("Lỗi:", err);
+        document.getElementById("title").innerText = "Lỗi kết nối dữ liệu!";
+        document.getElementById("loading").innerHTML = `<p class="text-red-400">${err.message}</p>`;
+      }
+    }
+
+    function renderHistory() {
+      const container = document.getElementById("history");
+      container.innerHTML = rawData.slice(0, 6).map(item => `
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-2 font-bold">
+                        <span>${item.date}</span>
+                        <span class="text-emerald-500 uppercase">${item.dayOfWeek}</span>
+                    </div>
+                    <p class="text-emerald-400 font-bold text-lg">GĐB: ${item.results?.GDB || "------"}</p>
+                    <p class="text-gray-500 text-xs text-right">Giải 8: ${item.results?.G8 || "--"}</p>
+                </div>
+            `).join("");
+    }
+
+    function renderAll() {
+      document.getElementById("loading").style.display = "none";
+      const latest = rawData[0];
+      document.getElementById("title").innerText = "DỰ ĐOÁN TP.HCM: " + latest.date;
+
+      // Gọi hàm từ file prediction-engine.js
+      if (typeof renderPrediction === "function") {
+        renderPrediction("prediction", rawData);
+      }
+      renderHistory();
+    }
+
+    fetchData();
+  </script>
+</body>
+
+</html>

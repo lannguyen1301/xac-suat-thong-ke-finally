@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Nhập Kết Quả Xổ Số TP.HCM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-focus:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        input,
+        select {
+            background: #1e293b !important;
+            color: white !important;
+            border: 1px solid #334155 !important;
+        }
+
+        input[readonly] {
+            background: #0f172a !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto glass-card rounded-3xl shadow-2xl p-8">
+        <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-6">
+            <h1 class="text-3xl font-bold text-sky-400">📝 Hệ Thống Quản Trị Data</h1>
+            <button onclick="clearToken()"
+                class="px-4 py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500 hover:text-white transition">
+                Xóa Token
+            </button>
+        </div>
+
+        <!-- Section 1: Thông tin thời gian -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-2">1. Chọn ngày quay</label>
+                <input id="date" type="date" class="w-full p-3 rounded-2xl input-focus font-bold">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-2">2. Thứ (Tự động)</label>
+                <input id="dayOfWeek" type="text" readonly placeholder="Chọn ngày bên trái..."
+                    class="w-full p-3 rounded-2xl font-bold text-emerald-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-2">3. Tuần / Kỳ (Tự động)</label>
+                <input id="week" type="number" readonly placeholder="--"
+                    class="w-full p-3 rounded-2xl font-bold text-sky-400 text-center">
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <!-- Giải Đặc Biệt -->
+            <div class="bg-slate-800/50 p-6 rounded-3xl border border-rose-500/20">
+                <label class="block font-semibold text-rose-400 mb-3 text-center uppercase tracking-widest">Giải Đặc
+                    Biệt (6 số)</label>
+                <input id="GDB" maxlength="6" placeholder="000000"
+                    class="w-full p-5 text-4xl text-center font-black text-rose-500 border-2 border-rose-500/30 rounded-2xl input-focus tracking-[10px]">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-semibold text-sky-400 mb-2">Giải Nhất (5 số)</label>
+                    <input id="G1" maxlength="5"
+                        class="w-full p-4 text-2xl text-center font-bold border-2 border-sky-500/30 rounded-2xl input-focus">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-2">Giải Nhì (5 số)</label>
+                    <input id="G2" maxlength="5"
+                        class="w-full p-4 text-2xl text-center font-bold border rounded-2xl input-focus">
+                </div>
+            </div>
+
+            <!-- Giải Ba -->
+            <div>
+                <label class="block font-semibold text-slate-300 mb-2">Giải Ba (5 số - 2 lần quay)</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <input class="G3 p-4 text-center font-bold border rounded-2xl input-focus text-xl" maxlength="5">
+                    <input class="G3 p-4 text-center font-bold border rounded-2xl input-focus text-xl" maxlength="5">
+                </div>
+            </div>
+
+            <!-- Giải Tư -->
+            <div>
+                <label class="block font-semibold text-slate-300 mb-2">Giải Tư (5 số - 7 lần quay)</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                    <input class="G4 p-3 text-center font-bold border rounded-2xl input-focus text-lg" maxlength="5">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-2">Giải Năm (4 số)</label>
+                    <input id="G5" maxlength="4"
+                        class="w-full p-4 text-center font-bold border rounded-2xl input-focus text-xl">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block font-semibold text-slate-300 mb-2">Giải Sáu (4 số - 3 lần quay)</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <input class="G6 p-4 text-center font-bold border rounded-2xl input-focus text-xl"
+                            maxlength="4">
+                        <input class="G6 p-4 text-center font-bold border rounded-2xl input-focus text-xl"
+                            maxlength="4">
+                        <input class="G6 p-4 text-center font-bold border rounded-2xl input-focus text-xl"
+                            maxlength="4">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-orange-500/5 p-4 rounded-2xl border border-orange-500/20">
+                    <label class="block font-semibold text-orange-400 mb-2">Giải Bảy (3 số)</label>
+                    <input id="G7" maxlength="3"
+                        class="w-full p-4 text-center font-bold border border-orange-500/30 rounded-2xl input-focus text-xl">
+                </div>
+                <div class="bg-orange-500/5 p-4 rounded-2xl border border-orange-500/20">
+                    <label class="block font-semibold text-orange-400 mb-2 text-center uppercase">Giải Tám (2
+                        số)</label>
+                    <input id="G8" maxlength="2"
+                        class="w-full p-4 text-center font-black text-orange-500 border-2 border-orange-500/30 rounded-2xl input-focus text-3xl">
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 flex flex-col md:flex-row gap-4">
+            <button onclick="saveResult()"
+                class="flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white py-5 rounded-2xl text-xl font-black transition-all shadow-lg shadow-emerald-900/20 active:scale-95">
+                🚀 LƯU DỮ LIỆU LÊN CLOUD
+            </button>
+            <button onclick="clearForm()"
+                class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-2xl font-bold transition-colors">
+                XÓA FORM
+            </button>
+        </div>
+
+        <!-- Bảng lịch sử -->
+        <div class="mt-16 bg-slate-900/50 rounded-3xl p-6 border border-slate-700">
+            <h2 class="text-2xl font-bold mb-6 text-sky-400 flex items-center">
+                <span class="mr-2">📋</span> Lịch sử 15 kỳ quay gần nhất
+            </h2>
+            <div class="overflow-x-auto rounded-xl">
+                <table class="w-full border-collapse" id="history-table">
+                    <thead class="bg-slate-800">
+                        <tr>
+                            <th class="p-4 text-left text-slate-400">Ngày</th>
+                            <th class="p-4 text-left text-slate-400">Thứ</th>
+                            <th class="p-4 text-center text-slate-400">GĐB</th>
+                            <th class="p-4 text-center text-slate-400">G8</th>
+                            <th class="p-4 text-center text-slate-400">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-logic.js"></script>
+</body>
+
+</html>
